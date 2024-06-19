@@ -1,52 +1,164 @@
-﻿using Academico.Models;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using Academico.Data;
+using Academico.Models;
 
 namespace Academico.Controllers
 {
     public class DepartamentoController : Controller
     {
-        private static List<Departamento> departamentos = new List<Departamento>()
+        private readonly AcademicoContext _context;
+
+        public DepartamentoController(AcademicoContext context)
         {
-            new Departamento()
-            {
-                DepartamentoID = 1,
-                Nome = "Sistemas de Informação"
-            },
-            new Departamento()
-            {
-                DepartamentoID= 42,
-                Nome = "Armário"
-            }
-        };
-        public IActionResult Index()
-        {
-            return View(departamentos);
+            _context = context;
         }
+
+        // GET: Departamento
+        public async Task<IActionResult> Index()
+        {
+            var academicoContext = _context.Departamentos.Include(d => d.Instituicao);
+            return View(await academicoContext.ToListAsync());
+        }
+
+        // GET: Departamento/Details/5
+        public async Task<IActionResult> Details(long? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var departamento = await _context.Departamentos
+                .Include(d => d.Instituicao)
+                .FirstOrDefaultAsync(m => m.DepartamentoID == id);
+            if (departamento == null)
+            {
+                return NotFound();
+            }
+
+            return View(departamento);
+        }
+
+        // GET: Departamento/Create
         public IActionResult Create()
         {
+            ViewData["InstituicaoId"] = new SelectList(_context.Instituicoes, "InstituicaoID", "Nome");
             return View();
         }
+
+        // POST: Departamento/Create
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create(Departamento departamento)
+        public async Task<IActionResult> Create([Bind("DepartamentoID,Nome,InstituicaoId")] Departamento departamento)
         {
-            departamento.DepartamentoID = departamentos.Select(d => d.DepartamentoID).Max() + 1;
-            departamentos.Add(departamento);
-            return RedirectToAction("Index");
+            if (ModelState.IsValid)
+            {
+                _context.Add(departamento);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
+            ViewData["InstituicaoId"] = new SelectList(_context.Instituicoes, "InstituicaoID", "Nome", departamento.InstituicaoId);
+            return View(departamento);
         }
 
-        public IActionResult Edit(long id)
+        // GET: Departamento/Edit/5
+        public async Task<IActionResult> Edit(long? id)
         {
-            return View(departamentos.Where(d => d.DepartamentoID == id).First());
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var departamento = await _context.Departamentos.FindAsync(id);
+            if (departamento == null)
+            {
+                return NotFound();
+            }
+            ViewData["InstituicaoId"] = new SelectList(_context.Instituicoes, "InstituicaoID", "Nome", departamento.InstituicaoId);
+            return View(departamento);
         }
 
+        // POST: Departamento/Edit/5
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Edit(Departamento departamento)
+        public async Task<IActionResult> Edit(long id, [Bind("DepartamentoID,Nome,InstituicaoId")] Departamento departamento)
         {
-            departamentos.Remove(departamentos.Where(d => d.DepartamentoID == departamento.DepartamentoID).First());
-            departamentos.Add(departamento);
-            return RedirectToAction("Index");
+            if (id != departamento.DepartamentoID)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    _context.Update(departamento);
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!DepartamentoExists(departamento.DepartamentoID))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+                return RedirectToAction(nameof(Index));
+            }
+            ViewData["InstituicaoId"] = new SelectList(_context.Instituicoes, "InstituicaoID", "Nome", departamento.InstituicaoId);
+            return View(departamento);
+        }
+
+        // GET: Departamento/Delete/5
+        public async Task<IActionResult> Delete(long? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var departamento = await _context.Departamentos
+                .Include(d => d.Instituicao)
+                .FirstOrDefaultAsync(m => m.DepartamentoID == id);
+            if (departamento == null)
+            {
+                return NotFound();
+            }
+
+            return View(departamento);
+        }
+
+        // POST: Departamento/Delete/5
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(long id)
+        {
+            var departamento = await _context.Departamentos.FindAsync(id);
+            if (departamento != null)
+            {
+                _context.Departamentos.Remove(departamento);
+            }
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
+
+        private bool DepartamentoExists(long id)
+        {
+            return _context.Departamentos.Any(e => e.DepartamentoID == id);
         }
     }
 }

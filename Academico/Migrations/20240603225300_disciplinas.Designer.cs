@@ -3,6 +3,7 @@ using Academico.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Academico.Migrations
 {
     [DbContext(typeof(AcademicoContext))]
-    partial class AcademicoContextModelSnapshot : ModelSnapshot
+    [Migration("20240603225300_disciplinas")]
+    partial class disciplinas
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -44,21 +47,6 @@ namespace Academico.Migrations
                     b.HasIndex("DepartamentoId");
 
                     b.ToTable("Cursos");
-                });
-
-            modelBuilder.Entity("Academico.Models.CursoDisciplina", b =>
-                {
-                    b.Property<long>("DisciplinaID")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("CursoID")
-                        .HasColumnType("int");
-
-                    b.HasKey("DisciplinaID", "CursoID");
-
-                    b.HasIndex("CursoID");
-
-                    b.ToTable("CursosDisciplinas");
                 });
 
             modelBuilder.Entity("Academico.Models.Departamento", b =>
@@ -136,25 +124,6 @@ namespace Academico.Migrations
                     b.Navigation("Departamento");
                 });
 
-            modelBuilder.Entity("Academico.Models.CursoDisciplina", b =>
-                {
-                    b.HasOne("Academico.Models.Curso", "Curso")
-                        .WithMany("CursosDisciplinas")
-                        .HasForeignKey("CursoID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Academico.Models.Disciplina", "Disciplina")
-                        .WithMany("CursosDisciplinas")
-                        .HasForeignKey("DisciplinaID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Curso");
-
-                    b.Navigation("Disciplina");
-                });
-
             modelBuilder.Entity("Academico.Models.Departamento", b =>
                 {
                     b.HasOne("Academico.Models.Instituicao", "Instituicao")
@@ -164,16 +133,6 @@ namespace Academico.Migrations
                         .IsRequired();
 
                     b.Navigation("Instituicao");
-                });
-
-            modelBuilder.Entity("Academico.Models.Curso", b =>
-                {
-                    b.Navigation("CursosDisciplinas");
-                });
-
-            modelBuilder.Entity("Academico.Models.Disciplina", b =>
-                {
-                    b.Navigation("CursosDisciplinas");
                 });
 #pragma warning restore 612, 618
         }
